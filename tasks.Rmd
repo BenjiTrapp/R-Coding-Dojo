@@ -191,7 +191,7 @@ Das Arbeiten mit CSV Dateien ist in R zwar einfach und komfortabel, auch weil ma
 `read.csv(…, stringsAsFactors = TRUE)` sollte in den seltensten Fällen benutzt werden, da Strings und Factors nicht das selbe sind. Die Konversion sollte immer explizit stattfinden!
 Man kann der Funktion eine HTTP(S) und eine File URI geben und damit ohne die Funktion zu ändern, Dateien sowohl lokal als auch von entfernten Resourcen einlesen.
 
-**Aufgabe** Lese das Inventory (Path2Repo/data/report.csv) in 
+**Aufgabe** Lese das Inventory (https://raw.githubusercontent.com/BenjiTrapp/R-Coding-Dojo/master/data/report.csv) in 
 einen Data Frame. Die CSV Datei besitzt einen Header und `;` als Separatorbuchstaben. 
 
 ```{r df_inventory}
@@ -363,7 +363,7 @@ test_that("it returns an error when a double is passed instead of a String", {
 ```{r, eval=F}
 library(dplyr)
 
-df <- read.csv('https://github.com/BenjiTrapp/R-Coding-Dojo/data/report.csv', header = TRUE, sep = ';', stringsAsFactors = FALSE)
+df <- read.csv('https://raw.githubusercontent.com/BenjiTrapp/R-Coding-Dojo/master/data/report.csv', header = TRUE, sep = ';', stringsAsFactors = FALSE)
 df_left <- data.frame(x = c(1, 2, 3, 4), y = c('a', 'b', 'c', 'd'))
 df_right <- data.frame(x = c(1, 2, 3, 4), z = c(TRUE, TRUE, FALSE, FALSE))
 
@@ -394,7 +394,7 @@ Annotation einfügt.
 library(ggplot2)
 library(dplyr)
 
-df <- read.csv('https://github.com/BenjiTrapp/R-Coding-Dojo/data/report.csv', header = TRUE, sep = ';', stringsAsFactors = FALSE)
+df <- read.csv('https://raw.githubusercontent.com/BenjiTrapp/R-Coding-Dojo/master/data/report.csv', header = TRUE, sep = ';', stringsAsFactors = FALSE)
 
 p_scale_server_types <- filter(df, makalu_vertical %in% c('scale', 'xlt')) %>%
   ggplot(aes(x = makalu_server_type)) +
@@ -433,5 +433,5 @@ jeder Vertikale festzustellen
 library(ggplot2)
 library(dplyr)
 
-df <- read.csv('https://github.com/BenjiTrapp/R-Coding-Dojo/data/report.csv', header = TRUE, sep = ';', stringsAsFactors = FALSE)
+df <- read.csv('https://raw.githubusercontent.com/BenjiTrapp/R-Coding-Dojo/master/data/report.csv', header = TRUE, sep = ';', stringsAsFactors = FALSE)
 ```
