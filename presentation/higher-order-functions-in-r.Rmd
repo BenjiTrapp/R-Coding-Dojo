@@ -1,0 +1,175 @@
+---
+title: "R-Coding-Dojo - Higher order functions"
+author: "Benjamin Trapp & Thomas Klinger"
+output: slidy_presentation
+---
+# Was sind *higher order functions*?
+
+Definition einer *higher order function*:
+
+```{r, eval = FALSE, echo = TRUE}
+Eine higher order function ist eine Funktion, die 
+als Argument(e) Funktionen erhÃ¤lt oder als Ergebnis zurück liefert.
+```
+
+# Wieso funktional?
+
+- Eleganter(er) Code
+- Ersetzung von imperativen Konstrukten (`for`, `while`, ...) durch Funktionen
+- Komposition von Funktionen
+- Ermöglicht Frameworks wie z.B `MapReduce`
+
+
+# R als funktionale Programmiersprache
+
+- R kann neben imperativer Programmierung und OOP, auch als funktionale Programmiersprache eingesetzt werden
+- Im basis Paket von R ist enthalten: 
+    * Reduce
+    * Filter
+    * Map
+    * Find
+    * Position
+    * Negate
+
+# Reduce (1/5)
+
+- *Reduce* "loopt" über die Elemente eines Vectors
+- Führt für jedes Element die selbe binäre Operation durch (z.B `+`)
+
+Da die Funktionsweise von *Reduce* etwas abstrakt ist, sollen die nachfolgenden Listings zum Verständnis beitragen.
+
+# Reduce (2/5)
+Der Code im nachfolgenden Listing ist derart "spezifisch", dass er nahezu unbenutzbar ist:
+
+```{r, eval = FALSE, echo = TRUE}
+my_sum_as_horrible_func <- function(x)
+{
+	if(length(x) == 1)
+	{
+		return(x[1])
+	}
+	if (length(x) == 2)
+	{
+		return(x[1] + x[2])
+	}
+	if (length(x) == 3)
+	{
+		return(x[1] + x[2] + x[3])
+	}
+}
+```
+
+# Reduce (3/5)
+Ein mögliches Refactoring des schlechten Codes aus dem vorherigen Listing könnte wie folgt aussehen:
+
+```{r, eval = FALSE, echo = TRUE}
+my_sum_as_loop <- function(x)
+{
+	result <- 0
+
+	for (i in 1:length(x))
+	{
+		result <- result + x[i]
+	}
+
+	return(result)
+}
+```
+
+# Reduce (4/5)
+*Reduce* nimmt im Vergleich dazu einen weiteren Abstraktionschritt vor:
+
+- Verwendung von vordefinierten binären Operationen => Vermeidung von reptetetiven Code Strukturen
+- *Reduce* kann mittels einer beliebigen binären Operation generalisiert werden
+
+In Code würde dies wie folgt aussehen:
+
+```{r, eval = FALSE, echo = TRUE}
+my_sum <- function (x) {Reduce(`+`, x)}
+```
+
+Mit diesem Ansatz können leicht andere Beispiele die eine ähnliche Semantik verfolgen implementiert werden:
+
+```{r, eval = FALSE, echo = TRUE}
+my_prod <- function (x) {Reduce(`*`, x)}
+
+my_factorial <- function (n) {Reduce(`*`, 1:n)}
+```
+
+# Reduce (5/5)
+Mit Optionen wie *accumulate*, können die Zwischenergebnisse der *Reduce* Operation aggregiert werden. Dies kann beispielsweise für eine "cummulative sum" Funktion verwendet werden:
+
+```{r, eval = FALSE, echo = TRUE}
+my_cumulative_sum <- function (x) {Reduce(`+`, x, accumulate = TRUE)}
+
+my_cumulative_prod <- function (x) {Reduce(`*`, x, accumulate = TRUE)}
+```
+
+# Filter (1/2)
+
+- Selektiert die Elemente eines Vectors, die ein bestimmtes Prädikat erfüllen
+- Prädikate sind atomare Aussagen => Werden durch unäre Operationen abgebildet
+- Beispiel für ein Prädikat: Alle Mitarbeiter die Männlich und älter als 35 Jahre alt sind
+
+In Code sieht dies wie folgt aus:
+
+```{r, eval = FALSE, echo = TRUE}
+even_numbers <- Filter(function (x) {x %% 2 == 0}, 1:10)
+odd_numbers <- Filter(function (x) {x %% 2 == 1}, 1:10)
+```
+
+# Filter (2/2)
+*Filter* kann auch mit "komplizierteren" Prädikaten kombiniert werden, um komplexere Funktionen stärker zu abstrahieren:
+
+```{r, eval = FALSE, echo = TRUE}
+is_divisor <- function(a, x) {x %% a == 0}
+
+is_prime <- function (x) {length(Filter(function (a) {is_divisor(a, x)}, 1:x)) == 2}
+```
+
+In Kombination mit *Reduce*, kann *Filter* langweilige und umständliche Tasks vereinfachen, wie beispielsweise die [Volkommenen Zahlen](https://de.wikipedia.org/wiki/Vollkommene_Zahl) auflisten:
+
+```{r, eval = FALSE, echo = TRUE}
+proper_divisors <- function (x) {Filter(function (a) {is_divisor(a, x)}, 1:(x - 1))}
+
+is_perfect <- function(x) {x == Reduce(`+`, proper_divisors(x))}
+
+small_perfect_numbers <- Filter(is_perfect, 1:1000)
+```
+
+
+# Map
+
+- Liefert die selbe Abstraktion wie die *apply* Funktionen
+- *apply* Funktionen => wenden eine als Argument übergebene Funktion auf eine Collection an
+
+Exemplarisch:
+```{r, eval = FALSE, echo = TRUE}
+Map(proper_divisors, 1:5)
+```
+
+# Find
+
+- Gekürzte Variante von *Filter*
+- Lokalisiert das erste Element eines Vectors das die Bedingung des übergebenen Prädikats erfüllt
+
+```{r, eval = FALSE, echo = TRUE}
+Find(is_prime, 1000:2000)
+```
+
+# Position
+
+- Variante von *Filter*
+- Gibt die Position des Elements zurück anstelle des Werts (*Find*)
+
+```{r, eval = FALSE, echo = TRUE}
+Position(is_prime, 1000:2000)
+```
+
+# Negate
+
+- Invertiert die Boolsche Logik eines existierenden Prädikats
+
+```{r, eval = FALSE, echo = TRUE}
+is_composite <- Negate(is_prime)
+```

@@ -1,0 +1,72 @@
+
+```{r ggplot_setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+df_plot <- data.frame(x = c(1,2,3), y=c(4,5,6), z = c('a', 'b', 'a'))
+```
+
+# ggplot2
+
+- Erweitert die Standard Funktionen, die R für Plotting bereitstellt
+- Basierend auf dem Artikel *Grammar of Graphics*
+- Integration mit Data Frames
+
+```{r ggplot_install, echo = TRUE, eval = FALSE}
+install.packages('ggplot2')
+```
+
+# ggplot2 - Grundlagen
+
+- `ggplot()` erstellt nur den leeren Plot
+- `aes(x = .., y=..)` steht für Aesthetics (x- und y-Achse sowie zusätzliche Parameter)
+- Diagramme werden mit `+` zum Graphen hinzugefügt und bekommen Data Frame vererbt
+
+Das Schema für einfache Diagramme ist immer das selbe:
+
+```{r ggplot_basic, eval = FALSE, echo = TRUE}
+library(ggplot2)
+df <- ... 
+ggplot(df, aes(x = ..., y = ...)) + 
+  geom_line() + 
+  xlab('X Axis Name') + 
+  ylab('Y Axis Name') + 
+  ggtitle('Plot Title')
+```
+
+# ggplot2 - Aesthetics
+
+Die `aes` Funktion nimmt folgende Parameter entgegen, um den Plot zu rendern
+
+- `x` Die Spalte, die die Werte der x-Achse definiert
+- `y` Die Spalte, die die Werte der y-Achse definiert
+- `color` Die Spalte, die der farbigen Markierung der Werte dient (umrandet lediglich)
+- `fill` Ähnlich `color`, füllt aber aus 
+- `group` Welche Spalte als Gruppierungsspalte dient
+
+
+# ggplot2 - Liniendiagramme 
+
+- Falls die x-Achse ein Datumstyp ist (z.B Date oder POSIXct), erkennt ggplot dies
+- `geom_point` kann zusätzlich benutzt werden, um die Datenpunkte zu markieren
+
+```{r, echo = TRUE, include=TRUE, fig.height = 4, fig.width = 4}
+library(ggplot2)
+ggplot(df_plot, aes(x = x, y = y)) + 
+  geom_line()
+```
+
+# ggplot2 - Speichern und Anzeigen
+
+## Speichern
+
+```{r, eval = FALSE, echo = TRUE}
+my_plot <- ggplot(....)
+ggsave(filename, plot = my_plot, devide = 'png') # oder auch gif, jpg für device
+```
+
+## Anzeigen
+
+```{r, eval = FALSE, echo = TRUE}
+my_plot <- ggplot(....)
+print(my_plot)
+```
+

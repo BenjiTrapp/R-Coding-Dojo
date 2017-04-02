@@ -1,0 +1,42 @@
+---
+title: "Aufgabe1: Einlesen und sortieren von Datensätze"
+author: "Thomas und Benji's R Coding Dojo"
+output: html_document
+---
+
+## Problemstellung:
+Als Basis für diese Aufgabe dient [Problem 22](https://projecteuler.net/index.php?section=problems&id=22) von Project Euler. Eine mögliche Lösung des Problems befindet sich in Teilaufgabe 1. Die eigentliche Aufgabe zielt auf das Erlenen der nachfolgenden Funktionalitäten ab:
+
+1. Einlesen der .txt Datei. Hierfür soll der untenstehende Pseudocode vervollständigt werden<br>
+2. Verwendung von lapply() / sapply()
+
+
+### Teilaufgabe 1:
+Folgender Code ist eine mögliche Lösung für das Problem 22. Leider fehlt in dieser Implementierung das einlesen der .txt datei. Die entsprechende Stelle hierfür ist mit einem Kommentar gekennzeichnet:
+
+```{r eval = FALSE, echo = TRUE}
+euler_uri <- 'https://projecteuler.net/index.php?section=problems&id=22'
+euler_txt_file <- 'data/euler.txt'
+
+problem22 <- function() {
+  # Vervollständige den untenstehenden Code. Die "help(..)" Funktion kann ggf. weiter helfen
+  # download.file(...)
+  # namelist <- scan(...)
+  sum(unlist(
+    lapply(namelist, 
+           function(Z) which(namelist==Z) * sum(match(unlist(strsplit(Z,"")), LETTERS)))))
+}
+```
+
+### Teilaufgabe 2:
+Nutze die Erkenntnisse aus dem Codefragment um folgende Sortierungen vorzunehmen:
+
+* Sortiere alle Vornamen absteigend alphabetisch
+* Alle Vornamen sind basierend auf ihrer Länge alphabetisch sortiert
+
+Hierbei könnte folgendes Codefragment helfen:
+
+```{r sapply_data.frame, eval = FALSE, echo = TRUE}
+data.frame(t(sapply(mylistlist,c)))
+sapply() konvertiert die Liste in eine Matrix, welche mittels data.frame in einen Data Frame konvertiert wird
+```

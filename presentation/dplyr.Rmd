@@ -1,0 +1,194 @@
+
+```{r setup_dplyr, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(dplyr)
+```
+
+# dplyr
+
+- DSL für die Manipulation und Verarbeitung von Daten
+- *Verben* (z.B `mutate`, `filter`, `select`) als Funktionen, die über Spalten operieren
+- Spaltennamen müssen **nicht** als String angegeben werden (kann aber)
+
+# Vorteile
+
+- Performant, da in `C++` (mittels `Rcpp`) geschrieben
+- `%>%` als Pipe-Operator (ähnlich wie `|` in UNIX) => Vermeidet Zwischenvariablen
+
+# Ein kleiner Vorgeschmack
+
+```{r, echo = TRUE}
+df <- read.csv('../data/pi.csv')
+names(df) <- c('target', 'timestamp', 'value')
+
+df %>%
+  mutate(timestamp = as.POSIXct(timestamp)) %>% # timestamp als POSIXct Typ
+  mutate(metric = 'page_impressions') %>%       # Verändern der Werte in metric Spalte
+  select(-c(target)) %>%                        # Entfernen der target Spalte
+  filter(value > 0) %>%                         # Filtern nach Werten in value > 0
+  head()                                        # Anzeigen der ersten 10 Zeilen
+```
+
+# Einschub: Pipes mit Magrittr
+
+- *%>%* kann mit dplyr zur Verkettung von Operationen in einer übersichtlichen Weise verwendet werden
+- Alle *dplyr* Funktionen haben als ersten Parameter ein data frame
+- *%>%* wendet das Result der linken Seite auf die rechte Seite an (*currying*)
+
+```{r, eval = FALSE, echo = TRUE}
+df %>% 
+  verb1(args...) %>%
+  verb2(args...)
+```
+
+ist das selbe wie
+
+```{r, eval = FALSE, echo = TRUE}
+df1 <- verb1(df, args...)
+df2 <- verb2(df1, args...)
+```
+
+nur übersichtlicher und resourcensparender, da keine Zwischenvariablen angelegt werden!
+
+# Mutate
+
+Verändert Spalten durch Anwenden einer Funktion oder setzen einer Konstanten:
+
+## Syntax
+
+```{r, eval = FALSE, echo = TRUE}
+mutate(dataframe, column = function(column), column2 = function(column2), ...)
+```
+
+## Beispiele
+
+```{r, eval = FALSE, echo = TRUE}
+mutate(df, metric = 'page_impressions') # Setzt metric auf konstanten Wert
+mutate(df, value = normalize(value)) # Wender normalize() auf value an
+```
+
+# Filter
+
+Wählt Zeilen aus einem Dataframe aus, die einem oder mehreren Prädikaten entsprechen
+
+## Syntax 
+
+```{r, eval = FALSE, echo = TRUE}
+filter(dataframe, predicate, ...)
+```
+
+## Beispiele
+
+### Alle Einträge, bei denen mehr als 0 PIs gemessen wurden
+
+```{r, eval = FALSE, echo = TRUE}
+filter(dataframe, value >= 0) # 
+```
+
+### Alle Einträge innerhalb eines Zeitraumes 
+```{r, eval = FALSE, echo = TRUE}
+filter(dataframe, value >= 0, timestamp %in% c(as.POSIXct('10.10.2016'), as.POSIXct('11.10.2016'))) 
+```
+
+# Slice
+
+Wählt Zeilen nach Position aus:
+
+## Syntax
+
+```{r, eval = FALSE, echo = TRUE}
+slice(dataframe, from:to)
+```
+
+## Beispiel
+
+Wähle die ersten 10 Einträge aus
+
+```{r, eval = FALSE, echo = TRUE}
+slice(df, 1:10)
+```
+
+# Arrange
+
+Sortiert Zeilen neu:
+
+## Syntax
+
+```{r, eval = FALSE, echo = TRUE}
+arrange(dataframe, column, ...)
+```
+
+## Beispiel
+
+Sortiere nach Zeitstempel
+
+```{r, eval = FALSE, echo = TRUE}
+arrange(df, timestamp)
+```
+
+Sortiere nach Zeitstempel und gemessenem Wert
+
+```{r, eval = FALSE, echo = TRUE}
+arrange(df, timestamp, value)
+```
+
+# Select
+
+Wählt Spalten aus
+
+## Syntax
+
+```{r, eval = FALSE, echo = TRUE}
+select(dataframe, column, ...)
+```
+
+## Beispiel
+
+Wähle *value* und *timestamp* aus
+
+```{r, eval = FALSE, echo = TRUE}
+select(df, value, timestamp)
+```
+
+Wähle alle Spalten außer *target* aus
+
+```{r, eval = FALSE, echo = TRUE}
+select(df, -c(target))
+```
+
+# Rename
+
+Benennt Spalten um. Im Gegensatz zu **select** bleiben die restlichen Spalten erhalten.
+
+## Syntax
+
+```{r, eval = FALSE, echo = TRUE}
+rename(df, old_name = new_name)
+```
+
+## Beispiel
+
+Bennennt die Spalten folgendermaßen um:
+
+- **value** in **pi_per_secs**
+- **timestamp** in **date**
+
+```{r, eval = FALSE, echo = TRUE}
+rename(df, value = pi_per_secs, timestamp = date)
+```
+
+# GroupBy
+
+Gruppiert die Zeilen nach einer Spalte. Diese _muss_ diskret sein (z.B Strings, Integer).
+Ein DataFrame kann dann gruppenweise bearbeitet werden
+
+## Syntax 
+
+```{r, eval = FALSE, echo = TRUE}
+group_by(df, column1, ...)
+```
+
+```{r, eval = FALSE, echo = TRUE}
+group_by(df, makalu_vertical)
+```
+

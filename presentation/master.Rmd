@@ -1,0 +1,24 @@
+---
+title: "R Coding Dojo"
+author: "Benjamin Trapp & Thomas Klinger"
+output: slidy_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+*Github Repository*: https://github.com/BenjiTrapp/R-Coding-Dojo.git
+
+```{r child = 'higher-order-functions-in-r.Rmd'}
+```
+
+```{r child = 'testing_with_r.Rmd'}
+```
+
+```{r child = 'dplyr.Rmd'}
+```
+
+```{r child = 'ggplot.Rmd'}
+```
+

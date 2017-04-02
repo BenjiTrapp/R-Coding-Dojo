@@ -1,0 +1,66 @@
+---
+title: "WEP WLAN Verschl?sselung knacken, mit Hilfe der Pollard Rho Methode zur Faktorisierung"
+author: "Thomas und Benji's R Coding Dojo"
+output:
+  html_document: default
+---
+
+### Problemstellung:
+Die Primfaktorenzerlegung großer Zahlen ist eines der numerisch "harten" Probleme. Public Key Security Verfahren (RSA) leiten z.B. ihre Schlüsselsicherheit davon ab, dass eine öffentlich bekannte gro?e Zahl nicht in der notwendigen Zeit in ihre (unbekannten) Primfaktoren zerlegt werden kann. 
+
+Aus umgekehrter Sicht ist es daher von Interesse, Rechenverfahren zu entwerfen mit deren Hilfe die Primfaktorisierung m?glichst beschleunigt werden kann.
+
+Der Ansatz des naiven Ausprobierens aller infrage kommenden Teiler, hat einen Rechenaufwand von $\mathcal O(\sqrt{N})$, wenn N die zu faktorisierende Zahl ist. Der in dieser Aufgabe zu implementierende Algorithmus, geht auf Pollard zur?ck und findet einen Primfaktor p im Mittel nach 1,18 * $\sqrt{p}$ Schritten. Die zugrundeliegende Idee ist die des Geburtstagsproblems. Wie man mit einfachen Mitteln nachrechnen kann, ist die Wahrscheinlichkeit überraschend groß, auf einer Party zuf?llig eine Person zu treffen die am gleichen Tag Geburtstag hat. Pikanterweise ist gerade das Nichtbeachten dieses Geburtstagsproblems der Grund für die kryptographische Schwäche der WLAN Verschl?sselung WEP.
+
+
+### Die Pollard Rho Methode zur Faktorisierung:
+Die Rho Methode ist ein stochastischer Algorithmus, der nach zufälliger Zeit, (relativ) zuverlässig Faktoren einer gegebenen ungeraden Zahl N aufspürt. Hierzu wird zunächst eine Pseudo-Zufallssequenz von Zahlen x$_{i}$ $\leq$ N erzeugt:
+
+<center>x$_{i+1}$ = x$_{i}$$^2$ + a mod N, a $\neq$ 0, -2 beliebig.</center><br>
+
+Gesucht werden nun die Perioden der Sequenz x$_{i}$. Also ein Index p, so dass x$_{i+p}$ = x$_{i+1}$ ist. Der Index p ist dann ein Teiler von N.
+Solche Zyklen L#ngen p lassen sich leicht mithilfe von Floyd's Zyklenfindungsalgorithmus aufspüren:
+
+  <center>Berechne: d = (x$_{2i}$ - x$_{i}$) mod N, dann ist p = GGT (d, N), wobei GGT der größte gemeinsame Teiler ist.</center><br>
+
+
+In Form von Pseudocode sieht der Algorithmus von Pollard wie folgt aus:
+
+```{r pseudo_code, eval=FALSE, echo=TRUE}
+rho (N,a) { N = zu faktorisierende Zahl; a = Inkrement der Zufallssequenz;}
+
+x = rand(1 . N);
+y = x; 
+p = 1;
+
+Repeat
+    x = (x^2 + a) mod N;
+    y = (y^2 + a) mod N; 
+    y = (y^2 + a) mod N;
+    d = (y - x) mod N;
+    p = ggt (d, N);
+until (p != 1);
+if (p != N) then factor_found(p)
+```
+
+Zusätzlich kann auch die nachfolgende Implementierung in Java (Code Snippet stammt von der Princeton University) helfen. Der Code kann unter dem nachfolgenden Link gefunden werden:
+http://introcs.cs.princeton.edu/java/99crypto/PollardRho.java.html
+
+
+**Wichtige Hinweise**:
+
+
+Die Rho-Methode findet nicht nur Primfaktoren, sondern manchmal auch das Produkt von mehreren Primfaktoren - deshalb muss ein einmal gefundener Faktor noch 'weiterbearbeitet' werden. Gefundene Faktoren k?nnen N zudem auch mehrfach teilen!
+
+Wenn die *RhoMethode* terminiert, ohne einen echten Faktor gefunden zu haben (p = N), dann ist das untersuchte N entweder unteilbar, oder N wurde als Produkt seiner Primfaktoren entdeckt.
+
+Der erstgenannte Fall kann über einen Primalitätstest ausgeschlossen werden. Im letztgenannten Fall muss die Faktorisierung mit einer veränderten Zufallssequenz (Startwert und a) erneut durchgeführt werden. Da es sich um ein zufallsgesteuertes Verfahren mit zuf?lliger Laufzeit handelt, können zu dem ungew?hnlich hohe Laufzeiten auftreten, ohne dass ein Faktor gefunden wird. 
+
+Damit die Laufzeit nicht übermäßig ansteigt, bietet es sich an eine Abbruchbedingung für die obige Schleife zu implementieren. Exemplarisch kann beispielsweise nach 15 Sekunden der Algorithmus mit einer anderen Zufallszahl neu gestartet werden.
+
+### Testen der Implementierung
+Um das implementierte Verfahren zu testen, bieten sich folgende Zahlen an:
+```
+Z1 = 8806715679 = 3 * 29 * 29 * 71 * 211 * 233 
+Z2 = 9398726230209357241 = 443 * 503 * 997 * 1511 * 3541 * 7907
+```

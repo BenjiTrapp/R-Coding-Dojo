@@ -1,0 +1,170 @@
+---
+title: "Einführung in devtools & testthat"
+author: "Thomas und Benji's R Coding Dojo"
+output: html_document
+---
+
+## Package: devtools
+
+Dieses Package ist eines der vielen von Hadley Wickham bereitgestellten Packages, die darauf abzielen das Leben als Entwickler zu erleichtern. Dies geschieht in diesem Fall durch die Bereitstellung von R Funktionen, die übliche (repetitive) Tasks vereinfachen. Vor diesem Hintergrund gibt es zwei Funktionen die zu Beginn bei der Entwicklung von eigenen Packages helfen:
+
+### load_all("pkg")
+
+Diese Funktion "simuliert" das Installieren und erneute Laden des aktuell in Entwicklung befindlichen Packages. Durch laden von R Code in R kompilierte "shared Objects" im Ordner src/ und Daten Dateien im Ordner data/. Dies hat den Vorteil, da man w?hrend der Entwicklung ?blicherweise nicht auf alle vorhandenen Funktionen zugreifen möchte. Vor diesem Hintergrund ignoriert *load_all* den Package NAMESPACE. Diese Funktion arbeitet dadurch effektiv, indem lediglich Dateien die einer ?nderung unterlegen sind erneut kompiliert und geladen werden. 
+
+**Angenommen**: Das gerade in Entwicklung befindliche Package liegt im Verzeichnis `~/my_package`. Ein Aufruf von *load_all(~/my_package)* würde nun alle vorhandenen Funktionen laden sowie kompilierte shared objects und Daten. Dies ist insbesondere nützlich, wenn man sich in den ersten Stufen der Entwicklung befindet. Meistens verfügt das Package auf dieser Stufe noch nicht ?ber einen vollumfänglichen Funktionsumfang, da dieser noch nicht implementiert ist. Daher bietet es sich an die `NAMESPACE` files zu ignorieren.
+
+### test("pkg")
+
+test("pkg") l?dt den aktuellen Code neu und f?hrt anschlie?end alle *testthat* Tests aus. Bei *testthat* handelt es sich um ein R Package, dass einem Entwickler erlaubt, komfortabel Komponentenstests in R zu schreiben und auszuführen. Das Package stellt daher einen sehr effizienten und ein einfachen Weg dar, um die Funktionalit?t der implementierten Funktionen zu beweisen. Ferner erhält man als Entwickler auch schnell Feedback über seinen Code und identifiziert m?gliche im Code schlummernde Bugs und Schwachstellen frühzeitig.
+
+## testthat - Komponententests in R
+
+**Ein wichtiger Hinweis vorab**: 
+
+Die Test-Funktion in devtools erwartet, dass alle Test-Dateien innerhalb des Packages in folgender Ordnerstruktur "pkg/inst/tests" abgelegt werden. Zusätzlich wird auch vorausgesetzt, dass die Testskripte mit dem folgenden Code erstellt werden: 
+
+```{r testthat_1, eval=FALSE, echo = TRUE}
+library(testthat)
+load_all("pkg") # oder library(pkg) für den Fall, dass das Package bereits gebaut und installiert ist
+test_package("pkg")
+```
+
+*testthat* verfolgt selbst eine hierarchische Struktur basierend auf **expectations**, **tests** und **context(e)**.
+
+Eine **expectation** beschreibt, was das Ergebnis einer Berechnung sein sollte und liefert somit eine Antwort auf die folgenden Fragen:
+
+- Werden die richtigen Werte und Klassen verwendet? 
+- Werden Fehlermeldungen ausgegeben, wenn dies im Code für ungültige Eingaben vorhergesehen ist?
+
+Ein guter Komponententest ist ein atomarer Test, der genau einen Aspekt des f?r die Funktion typischen Verhaltens prüft. Ein Test selbst wird mit dem Keyword *test_that* eingeleitet. Zusätzlich empfiehlt es sich analog zu anderen Komponententests aus anderen Sprachen und Frameworks wie folgt den Test als leeren Rumpf wie folgt zu strukturieren:
+
+```{r testthat_2, eval=FALSE, echo = TRUE}
+test_that("my_function is awesome", {
+  # given
+  # when
+  # then
+})
+```
+
+Nach dem Schreiben des leeren Methodenrumpfes, wird basierend auf EINER Funktionalit?t der implementierten Funktion ein Test geschrieben, um diese Funktionalität zu prüfen. An einem Beispiel konkretisiert für eine Funktion die, die Länge eines Strings zur?ckgibt, würde dies wie folgt aussehen:
+  
+```{r testthat_3, eval=FALSE, echo = TRUE}
+test_that("it returns the correct length of a passed String", {
+  # given
+  valid_input <- "awesome"
+  expected <- 7
+  
+  # when
+  result <- str_length(valid_input)
+  
+  # then
+  expect_that(result, equals(expected))
+})
+```
+
+Neben den eben gezeigten *expectation* "expect_that" stehen folgende Expectations zur Verfügung:
+
+|Funktion|Was tut es?|
+|----|----|
+|expect_true(x) |	Prüft ob ein Ausdruck wahr ist.|
+|expect_false(x) |	Prüft das ein Ausdruck NICHT wahr ist.|
+|expect_is(x, y) |	Prüft ob ein Object korrekt von einer spezifizierten Klasse geerbt hat.|
+|expect_equal(x, y) |	Überprüft auf Gleichheit der Statements mit einer numerischen Tolleranz.| 
+|expect_equivalent(x, y) |	Eine etwas "lockere" Version von equals, die Attribute ignorierts.|
+|expect_identical(x, y) |	Überprüft auf exakte Gleichheit der übergebenen Argumente.|
+|expect_matches(x, y)	| Matched einen character Vektor gegen einen regul?ren Ausdruck.|
+|expect_output(x, y) | Matched den ausgegebenen Output eines Ausdrucks gegen einen regul?ren Ausdruck.|
+|expect_message(x, y)	| Prüft, dass ein Ausdruck eine Nachricht ausgibt.|
+|expect_warning(x, y)	| Setzt das Ausgeben einer "warning" vorraus.|
+|expect_error(x, y)	| Verifziert, dass eine Funktion für ein bestimmtes Statement einen Fehler ausgibt.|
+
+
+Mit Hilfe von *context()* werden semantisch zusammengeh?rige Tests basierend auf ihrer Testintention gruppiert. Es bietet sich an, die Gruppierung im Kern wie folgt zu strukrutieren:
+
+* **HappyPath** - Diese Gruppe umfasst alle Tests die auf eine erfolgreiche Verwendung der Funktion einer Klasse abzielen.<br>
+* **SadPath** - Hier werden alle Eingaben gruppiert die zu keiner erfolgreichen Verwendung der Klasse oder Funktion f?hren<br>
+* **(Optional) BoundaryChecks** - In diese Gruppe fallen alle Grenzwertanalysen und stellen eine Art "Vermischung"von Happy- und SadPath Tests im Kontext der Betrachtung von Grenzwerten dar<br>
+* **ExeptionalPath** - Hier werden alle Tests gruppiert, die eine Fehlermeldung/Behandlung der Funktion/Klasse triggern<br>
+
+Dies setzt voraus, dass jeder einzelnde Test wie zuvor erwähnt, eine einzelne (isolierte) Funktionalität überprüft und eine sprechende Bezeichnung erhalten hat. Die Idee hinter einem Kontext ist, dass wenn ein Test fehlschlägt basierend auf den Kontext ein exakteres und schnelleres Feedback an den Benutzer propagiert wird, welche Codefunktionalität mit einem Problem behaftet ist. Konkretisiert anhand des vorherigen Beispiels k?nnte dies wie folgt aussehen:
+
+```{r testthat_4, eval=FALSE, echo = TRUE}
+
+context("HappyPath - Valid String lengths")
+
+test_that("it returns the correct length of a passed String", {
+  # given
+  valid_input <- "awesome"
+  expected <- 7
+  
+  # when
+  result <- str_length(valid_input)
+  
+  # then
+  expect_that(result, equals(expected))
+})
+
+test_that("it returns the correct length of a passed String with special characters", {
+  # given
+  valid_input <- "@w2$0m3 $7r!nG"
+  expected <- 14
+  
+  # when
+  result <- str_length(valid_input)
+  
+  # then
+  expect_that(result, equals(expected))
+})
+context("BoundaryCheck - String lengths across isolated boundaries")
+test_that("it returns the correct length of a passed String with only one character", {
+  # given
+  valid_input <- "z"
+  expected <- 1
+  
+  # when
+  result <- str_length(valid_input)
+  
+  # then
+  expect_that(result, equals(expected))
+})
+
+context("SadPath - Boundary Checks for String length ")
+test_that("it returns 0 when an empty String is passed", {
+  # given
+  valid_input <- ""
+  expected <- 0
+  
+  # when
+  result <- str_length(valid_input)
+  
+  # then
+  expect_that(result, equals(expected))
+})
+
+context("ExceptionalPath - Returns error on invalid Input")
+
+test_that("it returns an error when an integer is passed instead of a String", {
+  # given
+  invalid_input <- 42 
+  
+  # when method is called with an integer - then an error is assumed to appear
+  expect_error(str_length(invalid_input), "Integer passed instead of a String")
+})
+
+test_that("it returns an error when a double is passed instead of a String", {
+  # given
+  invalid_input <- 1337.5 
+  
+  # when method is called with a double - then an error is assumed to appear
+  expect_error(str_length(invalid_input), "Double passed instead of a String")
+})
+```
+
+### Teilaufgabe 1:
+
+* Implementiere die Methode str_length().
+* Beweise die Funktionalität der Implementierung, in dem alle angegebenen Tests "grün" durchlaufen werden.
+
+### Teilaufgabe 2:
+Vervollständige die angegebene Testsuite und füge weitere Tests hinzu, sofern es noch Lücken in der Testabdeckung vorhanden sind. (Begründung(en))

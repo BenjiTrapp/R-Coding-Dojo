@@ -1,0 +1,133 @@
+
+# Üblicher (crappy) Entwicklungs Workflow
+1. Schreiben einer Funktion 
+2. Laden der Funktion mittels `Ctrl/Cmd + Shift + L`<br>
+   oder für Fortgeschrittenere: `devtools::load_all()`.
+3. Experimentieren in der Konsole:
+      * Funktioniert meine Anwendung grob?
+      * Was passiert wenn...?
+      * Warum ist das so komisch? Irgendwie muss das anders ...
+4. "rinse and repeat"
+
+# Warum ist dieser Workflow schrott?
+- Alle durchgeführten Tests sind informell
+- Bei einer Weiterentwicklung nach X Monaten Zerbricht Code der einmal "funktioniert" hat
+- Statt debugging => stochern im Nebel
+
+## Durch dieses Vorgehen verliert man zudem folgende Benefits:
+
+- Testcode ist besser als die meisten Dokumentationen!
+- Andere können die Sonderfälle nicht mehr nachvollziehen
+- Bereits gefixte Bugs werden nicht mehr ordentlich retested
+- Verlust von Robustheit der Software
+- Hoher manueller Aufwand bei der Durchführung der informellen Tests (i.d.R. unfokussiert)
+- Verlust der Wartbarkeit bis hin zum Auftreten von Heisenbugs
+- ... 
+
+Es gibt unzählige weitere Benefits. Als Kernaussage lässt sich dies auf folgendes **Credo** zusammenfassen:
+
+```{r, eval=FALSE, echo = TRUE}
+Programmieren Sie immer so, als wäre der Typ, der den Code pflegen 
+muss, ein gewaltbereiter Psychopath der weiß wo Sie wohnen!
+                                            - Unbekannt
+
+-> Nur getesteter Code ist guter (wartbarer) Code!
+```
+
+
+# Wie würde ein besserer Workflow aussehen?
+
+Um ein Package fit für testthat zu machen, muss lediglich der nachfolgende Code aufgerufen werden:
+
+```{r, eval=FALSE, echo = TRUE}
+devtools::use_testthat()
+```
+Dabei werden "on the fly" folgende Aktionen abgenommen:
+
+- Erstellung des für testthat notwendigen Ordners (test/testthat)
+- Fügt testthat inkl. der Tests in das Suggests der Autovervollständigung ein
+- Erstellt ein R-Skript (test/testthat.R) mit dem alle tests ausgeführt werden können
+
+# Empfehlung für einen besseren Workflow
+
+Folgender Workflow vereinfacht das Testen in dem die nachfolgenden drei Schritte beachtet werden:
+
+1. Modifizieren des Codes und/oder der Tests
+2. Package mittels `Ctrl/Cmd + Shift + T` oder `devtools::test()` testen
+3. Schritte 1 & 2 so lange wiederholen, bis alle Tests grün durchlaufen
+
+
+# Anatomie eines Komponententests (1/2)
+
+- Der Komponententest ist atomar<br> 
+  => Ein Test deckt genau EINEN Aspekt des für die Funktion typischen verhaltens ab
+- Ein Test wird in R mit dem Keyword *test_that* eingeleitet
+- *testthat* verfolgt selbst eine hierarchische Struktur basierend auf **expectations**, **tests** und **context(e)** (wird gleich erläutert)
+
+Als "best practice" empfielt sich zu Beginn die Verwendung eines Rumpfes mit folgender Struktur:
+
+```{r testthat_2, eval=FALSE, echo = TRUE}
+test_that("my_function is awesome", {
+  # given
+  # when
+  # then
+})
+```
+
+# Anatomie eines Komponententests (2/2)
+
+Anschließend wird basierend auf EINER Funktionalität der implementierten Funktion der Test geschrieben.
+
+In Code sieht dies wie folgt aus:
+
+```{r testthat_3, eval=FALSE, echo = TRUE}
+test_that("it returns the correct length of a passed String", {
+  # given
+  valid_input <- "awesome"
+  expected <- 7
+  
+  # when
+  result <- str_length(valid_input)
+  
+  # then
+  expect_that(result, equals(expected))
+})
+```
+
+# Expectations
+
+```
+Eine expectation beschreibt, was das Ergebnis einer Berechnung sein sollte 
+```
+
+Expectations liefern Antworten auf die folgenden Fragen:
+
+- Werden die richtigen Werte und Klassen verwendet? 
+- Werden Fehlermeldungen ausgegeben, wenn dies im Code für ungültige Eingaben vorhergesehen ist?
+
+Expectations beginnen bei testthat immer mit `expect_` eine Auflistung aller möglichen Funktionen inkl. deren Semantik ist zum nachvollziehn im tasks Dokument beschrieben
+
+| Funktion                 |  Semantik                                                                           |
+|------------------------- | ------------------------------------------------------------------------------------|
+|expect_true(x)            |	Prüft ob ein Ausdruck wahr ist.                                                    |
+|expect_is(x, y)           |	Prüft ob ein Objekt korrekt von einer spezifizierten Klasse geerbt hat.            |
+|expect_equal(x, y)        |	Überprüft auf Gleichheit der Statements mit einer numerischen Toleranz.            |
+|expect_error(x, y)	       |  Verifiziert, dass eine Funktion für ein bestimmtes Statement einen Fehler ausgibt. |
+|  ...                     |  ...                                                                                |
+
+# Context
+
+- Gruppierung von semantisch zusammengehörigen Tests
+- Spiegeln die eigentliche Testintention für diese Gruppe wieder (durch eine kurze Beschreibung)
+- Context setzt voraus, dass die Tests isolierte und atomare Aspekte eienr Funktion überprüfen
+- Vorteil für den Einsatz eines Context => Schnelle Lokalisierung des Fehlgeschlagenen Tests
+
+
+# Empfehlung für Contexte
+Folgendes "Basis set" an Contexten sollten hierbei mindestens abgedeckt werden:
+
+- **HappyPath** - Diese Gruppe umfasst alle Tests die auf eine erfolgreiche Verwendung der Funktion einer Klasse abzielen.<br>
+- **SadPath** - Hier werden alle Eingaben gruppiert die zu keiner erfolgreichen Verwendung der Klasse oder Funktion f?hren<br>
+- **(Optional) BoundaryChecks** - In diese Gruppe fallen alle Grenzwertanalysen und stellen eine Art "Vermischung"von Happy- und SadPath Tests im Kontext der Betrachtung von Grenzwerten dar<br>
+* **ExeptionalPath** - Hier werden alle Tests gruppiert, die eine Fehlermeldung/Behandlung der Funktion/Klasse triggern<br>
+
