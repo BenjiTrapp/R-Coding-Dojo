@@ -1,5 +1,5 @@
 ---
-title: 'R Coding Dojo: Aufgabenblatt'
+title: 'R Coding Dojo: Kata Notebook'
 output:
   html_document:
     number_sections: yes
